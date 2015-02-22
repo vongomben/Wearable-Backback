@@ -20,7 +20,9 @@ const int analogInPin1 = A3;  // Analog input pin that the potentiometer is atta
 int sensorValue = 0;        // value read from the pot
 int sensorValue1 = 0;        // value read from the pot
 
-int pressureTreshold = 700;
+int pressureTreshold = 0;
+int pressureTreshold1 = 0;
+int pressureTresholdOffset = 100;
 
 void setup() {
   // initialize serial communications at 9600 bps:
@@ -28,6 +30,35 @@ void setup() {
 
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
+
+  //  while (!Serial);
+
+  // calibrate during the first three seconds
+  while (millis() < 5000) {
+    sensorValue = analogRead(analogInPin);
+    sensorValue1 = analogRead(analogInPin1);
+
+    // record the maximum value for sensor
+    if (sensorValue > pressureTreshold) {
+      pressureTreshold = sensorValue;
+    }
+
+    // record the maximum value for sensor1
+    if (sensorValue1 > pressureTreshold1) {
+      pressureTreshold1 = sensorValue1;
+    }
+
+    delay(20);
+  }
+
+  pressureTreshold += pressureTresholdOffset;
+  pressureTreshold1 += pressureTresholdOffset;
+
+  Serial.print("Treshold : ");
+  Serial.print(pressureTreshold);
+  Serial.print(" ");
+  Serial.println(pressureTreshold1);
+
   rainbowCycle(2);
   delay(50);
 }
@@ -37,125 +68,93 @@ void loop() {
   sensorValue = analogRead(analogInPin);
   sensorValue1 = analogRead(analogInPin1);
 
-
-  if ((sensorValue > pressureTreshold) && (sensorValue1 < pressureTreshold)) {
+  if ((sensorValue > pressureTreshold) && (sensorValue1 < pressureTreshold1)) {
     Serial.print("Caso 1: DX -->");
     printAll();
-    //    colorAddress(0, strip.Color(127, 127, 127), 50);
-    colorAddress(0, strip.Color(0, 0, 0), 50); // first LED green
-    colorAddress(1, strip.Color(0, 255, 0), 50); // second LED green
-    colorAddress(2, strip.Color(0, 255, 0), 50);   // third LED green
-    colorAddress(3, strip.Color(0, 255, 0), 50); // forth LED off
+
+    for (int i = 0; i < 4; i++) {
+      //arrow right
+      arrowRight();
+      delay(500);
+      //turn all leds off
+      allOff();
+      delay(500);
+    }
   }
-  else if ((sensorValue1 > pressureTreshold) && ( sensorValue < pressureTreshold)) {
+  else if ((sensorValue1 > pressureTreshold1) && ( sensorValue < pressureTreshold)) {
     Serial.print("Caso 2: SX -->");
     printAll();
-    colorAddress(0, strip.Color(0, 255, 0), 50); // first LED green
-    colorAddress(1, strip.Color(0, 255, 0), 50); // second LED green
-    colorAddress(2, strip.Color(0, 0, 0), 50);   // third LED green
-    colorAddress(3, strip.Color(0, 255, 0), 50); // forth LED green
 
-
+    for (int i = 0; i < 4; i++) {
+      arrowLeft();
+      delay(500);
+      //turn all leds off
+      allOff();
+      delay(500);
+    }
   }
-  else if ((sensorValue > pressureTreshold) && (sensorValue1 > pressureTreshold)) {
+  else if ((sensorValue > pressureTreshold) && (sensorValue1 > pressureTreshold1)) {
     Serial.print("Caso 3: STOP -->");
     printAll();
-    // All Red
-    colorAddress(0, strip.Color(255, 165, 0), 50);
-    colorAddress(1, strip.Color(255, 165, 0), 50);
-    colorAddress(2, strip.Color(255, 165, 0), 50);
-    colorAddress(3, strip.Color(255, 165, 0), 50);
 
-  }    else if ((sensorValue < pressureTreshold) && (sensorValue1 < pressureTreshold)) {
+    for (int i = 0; i < 10; i++) {
+      // All Red
+      stopp();
+      delay(200);
+      //turn all leds off
+      allOff();
+      delay(200);
+    }
+
+  } else if ((sensorValue < pressureTreshold) && (sensorValue1 < pressureTreshold1)) {
     Serial.print("Caso 4: GO -->");
     printAll();
-    // All Red
-    colorAddress(0, strip.Color(0, 0, 0), 50);
-    colorAddress(1, strip.Color(0, 0, 0), 50);
-    colorAddress(2, strip.Color(0, 0, 0), 50);
-    colorAddress(3, strip.Color(0, 0, 0), 50);
-
+    // All turned off
+    allOff();
   }
-
-
-  //destra();
-  //colorWipe(strip.Color(0, 0, 0), 50); // Nothing
-  //delay(5000);
-  //sinistra();
-
-  //  colorWipe(strip.Color(0, 0, 0), 50); // Nothing
-  //  delay(5000);
-  //  stopp();
-  //  colorWipe(strip.Color(0, 0, 0), 50); // Nothing
-  //colorAddress(0, strip.Color(127, 127, 127), 50);
-  //colorAddress(1,strip.Color(127,   0,   0), 50);
-
-  // print the results to the serial monitor:
-  //  Serial.print("sensor1 = " );
-  //  Serial.print(sensorValue);
-  //  Serial.print(" sensor2 = " );
-  //  Serial.println(sensorValue1);
-  //  //Serial.print("\t output = ");
-  //Serial.println(outputValue);
-
-  // wait 2 milliseconds before the next loop
-  // for the analog-to-digital converter to settle
-  // after the last reading:
-  //delay(2);
-
-  // Some example procedures showing how to display to the pixels:
-  //  colorWipe(strip.Color(255, 0, 0), 50); // Red
-  //  colorWipe(strip.Color(0, 255, 0), 50); // Green
-  //  colorWipe(strip.Color(0, 0, 255), 50); // Blue
-  //  // Send a theater pixel chase in...
-  //  theaterChase(strip.Color(127, 127, 127), 50); // White
-  //  theaterChase(strip.Color(127,   0,   0), 50); // Red
-  //  theaterChase(strip.Color(  0,   0, 127), 50); // Blue
-  //
-  //  rainbow(20);
-  //  rainbowCycle(20);
-  //  theaterChaseRainbow(50);
-
 }
 
-void printAll(){
+void printAll() {
 
- //Serial.print("sensor1 = " );
+  //Serial.print("sensor1 = " );
   Serial.print(sensorValue);
-Serial.print("," );
-//  Serial.print(" sensor2 = " );
+  Serial.print("," );
+  //  Serial.print(" sensor2 = " );
   Serial.print(sensorValue1);
-  Serial.println();}
-
-
-void destra() {
-  colorAddress(0, strip.Color(0, 255, 0), 50); // first LED green
-  colorAddress(1, strip.Color(0, 255, 0), 50); // second LED green
-  colorAddress(2, strip.Color(0, 255, 0), 50);   // third LED green
-  colorAddress(3, strip.Color(0, 0, 0), 50); // forth LED off
-  delay(2000);
+  Serial.println();
 }
 
-void sinistra() {
 
-  colorAddress(0, strip.Color(0, 255, 0), 50); // first LED green
-  colorAddress(1, strip.Color(0, 0, 0), 50); // second LED green
-  colorAddress(2, strip.Color(0, 255, 0), 50);   // third LED green
-  colorAddress(3, strip.Color(0, 255, 0), 50); // forth LED green
-  delay(2000);
+void arrowRight() {
+  colorAddress(0, strip.Color(0, 0, 0), 0); // first LED off
+  
+  colorAddress(1, strip.Color(255, 165, 0), 0); // second LED orange
+  colorAddress(3, strip.Color(255, 165, 0), 75); // forth LED orange
+  colorAddress(2, strip.Color(255, 165, 0), 75);   // third LED orange
+}
 
-
+void arrowLeft() {
+    colorAddress(2, strip.Color(0, 0, 0), 0);   // third LED off
+    
+  colorAddress(1, strip.Color(255, 165, 0), 0); // second LED orange
+  colorAddress(3, strip.Color(255, 165, 0), 75); // forth LED orange
+  colorAddress(0, strip.Color(255, 165, 0), 75); // first LED orange
 }
 
 void stopp() {
-  colorAddress(0, strip.Color(255, 0, 0), 50);
-  colorAddress(1, strip.Color(255, 0, 0), 50);
-  colorAddress(2, strip.Color(255, 0, 0), 50);
-  colorAddress(3, strip.Color(255, 0, 0), 50);
-  delay(2000);
-
+  // All Red
+  colorAddress(0, strip.Color(255, 0, 0), 0);
+  colorAddress(2, strip.Color(255, 0, 0), 25);
+  colorAddress(1, strip.Color(255, 0, 0), 0);
+  colorAddress(3, strip.Color(255, 0, 0), 25);
 }
 
+void allOff() {
+  colorAddress(0, strip.Color(0, 0, 0), 0);
+  colorAddress(1, strip.Color(0, 0, 0), 0);
+  colorAddress(2, strip.Color(0, 0, 0), 0);
+  colorAddress(3, strip.Color(0, 0, 0), 0);
+}
 
 // Fill individual dots with a specific color
 void colorAddress(int add, uint32_t c, uint8_t wait) {
